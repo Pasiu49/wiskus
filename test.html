@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maskotka 3D</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #141417;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // 1. Scena, kamera i renderer
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+      35,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      500
+    );
+    camera.position.set(0, 0.3, 4.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+
+    // 2. Światła
+    scene.add(new THREE.AmbientLight(0xffffff, 1.4));
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    keyLight.position.set(2.5, 4, 4);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x9bb8ff, 0.8);
+    fillLight.position.set(-3, 1, 2);
+    scene.add(fillLight);
+
+    // 3. Konfiguracja ruchu głowy i kursor
+    const CONFIG = {
+      modelUrl: './wiskus.glb',
+      desiredHeight: 2.0,     // Docelowa wysokość modelu w jednostkach sceny
+      maxYawDeg: 35,          // Max obrót na boki (w stopniach)
+      maxPitchDeg: 22,        // Max obrót góra/dół (w stopniach)
+      smoothness: 0.08,       // Płynność LERP (0.04 = wolno/miękko, 0.2 = szybko)
+      invertYaw: true,       // Zmień na true, jeśli kręci w złą stronę na boki
+      invertPitch: false,     // Zmień na true, jeśli kręci w złą stronę góra/dół
+      swapAxes: false         // Zmień na true, jeśli góra/dół zamieniło się z lewo/prawo
+    };
+
+    const maxYaw = THREE.MathUtils.degToRad(CONFIG.maxYawDeg);
+    const maxPitch = THREE.MathUtils.degToRad(CONFIG.maxPitchDeg);
+
+    let headBone = null;
+    const baseRotation = new THREE.Euler();
+    const pointer = { x: 0, y: 0 };
+    const current = { yaw: 0, pitch: 0 };
+
+    // 4. Ładowanie modelu + automatyczne skalowanie i wyśrodkowanie
+    const loader = new GLTFLoader();
+    loader.load(
+      CONFIG.modelUrl,
+      (gltf) => {
+        const model = gltf.scene;
+
+        // Wylicz rozmiar i środek modelu
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+
+        // Przeskaluj tak, aby największy wymiar / wysokość była równa desiredHeight
+        const referenceDim = size.y > 0.0001 ? size.y : Math.max(size.x, size.z, 1);
+        const scaleFactor = CONFIG.desiredHeight / referenceDim;
+        model.scale.setScalar(scaleFactor);
+
+        // Przelicz bounding box po skalowaniu i wyśrodkuj model na (0, 0, 0)
+        const scaledBox = new THREE.Box3().setFromObject(model);
+        const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+        model.position.sub(scaledCenter);
+
+        scene.add(model);
+
+        // Znajdź kość głowy i wypisz strukturę w konsoli
+        console.group('Struktura modelu .glb');
+        model.traverse((obj) => {
+            console.log(`${obj.type} | name: "${obj.name}"`);
+            if (!headBone && obj.isBone && obj.name === 'Bone') {
+                headBone = obj;
+                baseRotation.copy(obj.rotation);
+    }
+});
+        console.groupEnd();
+
+        if (!headBone) {
+          console.warn(
+            'Nie znaleziono automatycznie kości głowy (szukano: head/glowa/głowa). Sprawdź nazwy kości w konsoli wyżej.'
+          );
+        } else {
+          console.log('Wybrana kość głowy:', headBone.name);
+        }
+      },
+      undefined,
+      (err) => {
+        console.error('Błąd ładowania pliku .glb:', err);
+      }
+    );
+
+    // 5. Śledzenie kursora
+    window.addEventListener('pointermove', (e) => {
+      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    });
+
+    // 6. Responsywność okna
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // 7. Pętla animacji
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (headBone) {
+        const yawSign = CONFIG.invertYaw ? -1 : 1;
+        const pitchSign = CONFIG.invertPitch ? -1 : 1;
+
+        const targetYaw = THREE.MathUtils.clamp(
+          pointer.x * maxYaw * yawSign,
+          -maxYaw,
+          maxYaw
+        );
+        const targetPitch = THREE.MathUtils.clamp(
+          -pointer.y * maxPitch * pitchSign,
+          -maxPitch,
+          maxPitch
+        );
+
+        current.yaw = THREE.MathUtils.lerp(current.yaw, targetYaw, CONFIG.smoothness);
+        current.pitch = THREE.MathUtils.lerp(current.pitch, targetPitch, CONFIG.smoothness);
+
+        if (CONFIG.swapAxes) {
+          headBone.rotation.x = baseRotation.x + current.yaw;
+          headBone.rotation.y = baseRotation.y + current.pitch;
+        } else {
+          headBone.rotation.y = baseRotation.y + current.yaw;
+          headBone.rotation.x = baseRotation.x + current.pitch;
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
