@@ -60,25 +60,34 @@
     fillLight.position.set(-3, 1, 2);
     scene.add(fillLight);
 
-    // 3. Konfiguracja ruchu głowy i kursor
+    // 3. Konfiguracja ruchu głowy (Bone) i tułowia (Bone_1)
     const CONFIG = {
-      modelUrl: './wiskus.glb',
-      desiredHeight: 2.0,     // Docelowa wysokość modelu w jednostkach sceny
-      maxYawDeg: 35,          // Max obrót na boki (w stopniach)
-      maxPitchDeg: 22,        // Max obrót góra/dół (w stopniach)
-      smoothness: 0.08,       // Płynność LERP (0.04 = wolno/miękko, 0.2 = szybko)
-      invertYaw: true,       // Zmień na true, jeśli kręci w złą stronę na boki
-      invertPitch: false,     // Zmień na true, jeśli kręci w złą stronę góra/dół
-      swapAxes: false         // Zmień na true, jeśli góra/dół zamieniło się z lewo/prawo
+      modelUrl: './maskotka.glb',
+      desiredHeight: 2.0,       // Docelowa wysokość modelu w jednostkach sceny
+      maxYawDeg: 35,            // Max obrót głowy na boki (w stopniach)
+      maxPitchDeg: 22,          // Max obrót głowy góra/dół (w stopniach)
+      smoothness: 0.08,         // Płynność LERP (0.04 = wolno/miękko, 0.2 = szybko)
+      invertYaw: true,          // Odwrócenie obrotu głowy lewo/prawo
+      invertPitch: true,        // Odwrócenie obrotu głowy góra/dół
+      swapAxes: false,          // Zamiana osi X i Y dla głowy
+
+      // Ustawienia tułowia (Bone_1)
+      torsoYawFactor: 0.3,      // Tułów skręca na boki w 30% względem głowy
+      torsoLeanBackFactor: 0.35,// Odchylenie tułowia w tył przy patrzeniu w dół
+      invertTorsoYaw: false,    // Zmień na true, jeśli tułów skręca w złą stronę
+      invertTorsoPitch: false   // Zmień na true, jeśli zamiast w tył pochyla się do przodu
     };
 
     const maxYaw = THREE.MathUtils.degToRad(CONFIG.maxYawDeg);
     const maxPitch = THREE.MathUtils.degToRad(CONFIG.maxPitchDeg);
 
     let headBone = null;
-    const baseRotation = new THREE.Euler();
+    let torsoBone = null;
+    const baseHeadRot = new THREE.Euler();
+    const baseTorsoRot = new THREE.Euler();
+
     const pointer = { x: 0, y: 0 };
-    const current = { yaw: 0, pitch: 0 };
+    const current = { yaw: 0, pitch: 0, torsoLean: 0 };
 
     // 4. Ładowanie modelu + automatyczne skalowanie i wyśrodkowanie
     const loader = new GLTFLoader();
@@ -87,41 +96,32 @@
       (gltf) => {
         const model = gltf.scene;
 
-        // Wylicz rozmiar i środek modelu
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
-        const center = box.getCenter(new THREE.Vector3());
 
-        // Przeskaluj tak, aby największy wymiar / wysokość była równa desiredHeight
         const referenceDim = size.y > 0.0001 ? size.y : Math.max(size.x, size.z, 1);
         const scaleFactor = CONFIG.desiredHeight / referenceDim;
         model.scale.setScalar(scaleFactor);
 
-        // Przelicz bounding box po skalowaniu i wyśrodkuj model na (0, 0, 0)
         const scaledBox = new THREE.Box3().setFromObject(model);
         const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
         model.position.sub(scaledCenter);
 
         scene.add(model);
 
-        // Znajdź kość głowy i wypisz strukturę w konsoli
-        console.group('Struktura modelu .glb');
         model.traverse((obj) => {
-            console.log(`${obj.type} | name: "${obj.name}"`);
-            if (!headBone && obj.isBone && obj.name === 'Bone') {
-                headBone = obj;
-                baseRotation.copy(obj.rotation);
-    }
-});
-        console.groupEnd();
+          if (!headBone && obj.isBone && obj.name === 'Bone') {
+            headBone = obj;
+            baseHeadRot.copy(obj.rotation);
+          }
+          if (!torsoBone && obj.isBone && obj.name === 'Bone_1') {
+            torsoBone = obj;
+            baseTorsoRot.copy(obj.rotation);
+          }
+        });
 
-        if (!headBone) {
-          console.warn(
-            'Nie znaleziono automatycznie kości głowy (szukano: head/glowa/głowa). Sprawdź nazwy kości w konsoli wyżej.'
-          );
-        } else {
-          console.log('Wybrana kość głowy:', headBone.name);
-        }
+        if (!headBone) console.warn('Nie znaleziono kości głowy ("Bone").');
+        if (!torsoBone) console.warn('Nie znaleziono kości tułowia ("Bone_1").');
       },
       undefined,
       (err) => {
@@ -146,30 +146,56 @@
     function animate() {
       requestAnimationFrame(animate);
 
+      const yawSign = CONFIG.invertYaw ? -1 : 1;
+      const pitchSign = CONFIG.invertPitch ? -1 : 1;
+
+      const targetYaw = THREE.MathUtils.clamp(
+        pointer.x * maxYaw * yawSign,
+        -maxYaw,
+        maxYaw
+      );
+      const targetPitch = THREE.MathUtils.clamp(
+        -pointer.y * maxPitch * pitchSign,
+        -maxPitch,
+        maxPitch
+      );
+
+      current.yaw = THREE.MathUtils.lerp(current.yaw, targetYaw, CONFIG.smoothness);
+      current.pitch = THREE.MathUtils.lerp(current.pitch, targetPitch, CONFIG.smoothness);
+
       if (headBone) {
-        const yawSign = CONFIG.invertYaw ? -1 : 1;
-        const pitchSign = CONFIG.invertPitch ? -1 : 1;
+        if (CONFIG.swapAxes) {
+          headBone.rotation.x = baseHeadRot.x + current.yaw;
+          headBone.rotation.y = baseHeadRot.y + current.pitch;
+        } else {
+          headBone.rotation.y = baseHeadRot.y + current.yaw;
+          headBone.rotation.x = baseHeadRot.x + current.pitch;
+        }
+      }
 
-        const targetYaw = THREE.MathUtils.clamp(
-          pointer.x * maxYaw * yawSign,
-          -maxYaw,
-          maxYaw
-        );
-        const targetPitch = THREE.MathUtils.clamp(
-          -pointer.y * maxPitch * pitchSign,
-          -maxPitch,
-          maxPitch
+      if (torsoBone) {
+        const torsoYawSign = CONFIG.invertTorsoYaw ? -1 : 1;
+        const torsoPitchSign = CONFIG.invertTorsoPitch ? -1 : 1;
+
+        // Reaguje wyłącznie na zjazd kursora w dół (pointer.y < 0)
+        const downwardAmount = Math.max(0, -pointer.y);
+        const targetTorsoLean =
+          downwardAmount * maxPitch * CONFIG.torsoLeanBackFactor * torsoPitchSign;
+
+        current.torsoLean = THREE.MathUtils.lerp(
+          current.torsoLean,
+          targetTorsoLean,
+          CONFIG.smoothness
         );
 
-        current.yaw = THREE.MathUtils.lerp(current.yaw, targetYaw, CONFIG.smoothness);
-        current.pitch = THREE.MathUtils.lerp(current.pitch, targetPitch, CONFIG.smoothness);
+        const targetTorsoYaw = current.yaw * CONFIG.torsoYawFactor * torsoYawSign;
 
         if (CONFIG.swapAxes) {
-          headBone.rotation.x = baseRotation.x + current.yaw;
-          headBone.rotation.y = baseRotation.y + current.pitch;
+          torsoBone.rotation.x = baseTorsoRot.x + targetTorsoYaw;
+          torsoBone.rotation.y = baseTorsoRot.y + current.torsoLean;
         } else {
-          headBone.rotation.y = baseRotation.y + current.yaw;
-          headBone.rotation.x = baseRotation.x + current.pitch;
+          torsoBone.rotation.y = baseTorsoRot.y + targetTorsoYaw;
+          torsoBone.rotation.x = baseTorsoRot.x + current.torsoLean;
         }
       }
 
