@@ -174,19 +174,15 @@
       }
 
       if (torsoBone) {
-        const torsoYawSign = CONFIG.invertTorsoYaw ? -1 : 1;
-        const torsoPitchSign = CONFIG.invertTorsoPitch ? -1 : 1;
+  const downwardAmount = Math.max(0, -pointer.y);
+  const leanRad = THREE.MathUtils.degToRad(20) * downwardAmount;
+  const yawRad = THREE.MathUtils.degToRad(12) * current.yaw;
 
-        // Reaguje wyłącznie na zjazd kursora w dół (pointer.y < 0)
-        const downwardAmount = Math.max(0, -pointer.y);
-        const targetTorsoLean =
-          downwardAmount * maxPitch * CONFIG.torsoLeanBackFactor * torsoPitchSign;
-
-        current.torsoLean = THREE.MathUtils.lerp(
-          current.torsoLean,
-          targetTorsoLean,
-          CONFIG.smoothness
-        );
+  // Tymczasowy test: sprawdzamy X, Y oraz Z, żeby zobaczyć, która oś odchyla tułów w tył
+  torsoBone.rotation.x = baseTorsoRot.x + leanRad;
+  torsoBone.rotation.y = baseTorsoRot.y + yawRad;
+  torsoBone.rotation.z = baseTorsoRot.z + leanRad;
+}
 
         const targetTorsoYaw = current.yaw * CONFIG.torsoYawFactor * torsoYawSign;
 
@@ -206,3 +202,4 @@
   </script>
 </body>
 </html>
+
