@@ -1,205 +1,136 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Maskotka 3D</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: #141417;
-      font-family: system-ui, -apple-system, sans-serif;
+<div id="mascot-widget" style="position: fixed; right: 20px; bottom: 20px; width: 220px; height: 220px; z-index: 9999; pointer-events: none;"></div>
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
     }
-    canvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-    }
-  </style>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-      }
-    }
-  </script>
-</head>
-<body>
-  <script type="module">
-    import * as THREE from 'three';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  }
+</script>
 
-    // 1. Scena, kamera i renderer
-    const scene = new THREE.Scene();
+<script type="module">
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-    const camera = new THREE.PerspectiveCamera(
-      35,
-      window.innerWidth / window.innerHeight,
-      0.05,
-      500
+  const container = document.getElementById('mascot-widget');
+
+  const CONFIG = {
+    modelUrl: './str_wiskus.glb',
+    desiredHeight: 1.8,
+    maxYawDeg: 35,
+    maxPitchDeg: 22,
+    smoothness: 0.08,
+    invertYaw: false,   // false = patrzy w stronę kursora lewo/prawo
+    invertPitch: false  // false = patrzy w stronę kursora góra/dół
+  };
+
+  const scene = new THREE.Scene();
+
+  const getSize = () => ({
+    width: container.clientWidth || 220,
+    height: container.clientHeight || 220
+  });
+
+  const initialSize = getSize();
+  const camera = new THREE.PerspectiveCamera(
+    35,
+    initialSize.width / initialSize.height,
+    0.05,
+    500
+  );
+  camera.position.set(0, 0.1, 4.2);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(initialSize.width, initialSize.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  container.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.4));
+
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+  keyLight.position.set(2.5, 4, 4);
+  scene.add(keyLight);
+
+  const fillLight = new THREE.DirectionalLight(0x9bb8ff, 0.8);
+  fillLight.position.set(-3, 1, 2);
+  scene.add(fillLight);
+
+  // Kontener w czystym układzie Three.js (Y = lewo/prawo, X = góra/dół)
+  const pivot = new THREE.Group();
+  pivot.rotation.order = 'YXZ';
+  scene.add(pivot);
+
+  const maxYaw = THREE.MathUtils.degToRad(CONFIG.maxYawDeg);
+  const maxPitch = THREE.MathUtils.degToRad(CONFIG.maxPitchDeg);
+
+  const pointer = { x: 0, y: 0 };
+  const current = { yaw: 0, pitch: 0 };
+
+  const loader = new GLTFLoader();
+  loader.load(
+    CONFIG.modelUrl,
+    (gltf) => {
+      const model = gltf.scene;
+
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const referenceDim = size.y > 0.0001 ? size.y : Math.max(size.x, size.z, 1);
+      model.scale.setScalar(CONFIG.desiredHeight / referenceDim);
+
+      const scaledBox = new THREE.Box3().setFromObject(model);
+      const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
+      model.position.sub(scaledCenter);
+
+      pivot.add(model);
+    },
+    undefined,
+    (err) => {
+      console.error('Błąd ładowania pliku .glb:', err);
+    }
+  );
+
+  window.addEventListener('pointermove', (e) => {
+    pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
+  });
+
+  window.addEventListener('resize', () => {
+    const next = getSize();
+    camera.aspect = next.width / next.height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(next.width, next.height);
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+
+    const yawSign = CONFIG.invertYaw ? -1 : 1;
+    const pitchSign = CONFIG.invertPitch ? -1 : 1;
+
+    // pointer.x > 0 (kursor w prawo) -> obrót Y na plus (twarz w prawo)
+    // pointer.y > 0 (kursor w górę) -> obrót X na minus (twarz w górę)
+    const targetYaw = THREE.MathUtils.clamp(
+      pointer.x * maxYaw * yawSign,
+      -maxYaw,
+      maxYaw
     );
-    camera.position.set(0, 0.3, 4.5);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    document.body.appendChild(renderer.domElement);
-
-    // 2. Światła
-    scene.add(new THREE.AmbientLight(0xffffff, 1.4));
-
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-    keyLight.position.set(2.5, 4, 4);
-    scene.add(keyLight);
-
-    const fillLight = new THREE.DirectionalLight(0x9bb8ff, 0.8);
-    fillLight.position.set(-3, 1, 2);
-    scene.add(fillLight);
-
-    // 3. Konfiguracja ruchu głowy (Bone) i tułowia (Bone_1)
-    const CONFIG = {
-      modelUrl: './maskotka.glb',
-      desiredHeight: 2.0,       // Docelowa wysokość modelu w jednostkach sceny
-      maxYawDeg: 35,            // Max obrót głowy na boki (w stopniach)
-      maxPitchDeg: 22,          // Max obrót głowy góra/dół (w stopniach)
-      smoothness: 0.08,         // Płynność LERP (0.04 = wolno/miękko, 0.2 = szybko)
-      invertYaw: true,          // Odwrócenie obrotu głowy lewo/prawo
-      invertPitch: true,        // Odwrócenie obrotu głowy góra/dół
-      swapAxes: false,          // Zamiana osi X i Y dla głowy
-
-      // Ustawienia tułowia (Bone_1)
-      torsoYawFactor: 0.3,      // Tułów skręca na boki w 30% względem głowy
-      torsoLeanBackFactor: 0.35,// Odchylenie tułowia w tył przy patrzeniu w dół
-      invertTorsoYaw: false,    // Zmień na true, jeśli tułów skręca w złą stronę
-      invertTorsoPitch: false   // Zmień na true, jeśli zamiast w tył pochyla się do przodu
-    };
-
-    const maxYaw = THREE.MathUtils.degToRad(CONFIG.maxYawDeg);
-    const maxPitch = THREE.MathUtils.degToRad(CONFIG.maxPitchDeg);
-
-    let headBone = null;
-    let torsoBone = null;
-    const baseHeadRot = new THREE.Euler();
-    const baseTorsoRot = new THREE.Euler();
-
-    const pointer = { x: 0, y: 0 };
-    const current = { yaw: 0, pitch: 0, torsoLean: 0 };
-
-    // 4. Ładowanie modelu + automatyczne skalowanie i wyśrodkowanie
-    const loader = new GLTFLoader();
-    loader.load(
-      CONFIG.modelUrl,
-      (gltf) => {
-        const model = gltf.scene;
-
-        const box = new THREE.Box3().setFromObject(model);
-        const size = box.getSize(new THREE.Vector3());
-
-        const referenceDim = size.y > 0.0001 ? size.y : Math.max(size.x, size.z, 1);
-        const scaleFactor = CONFIG.desiredHeight / referenceDim;
-        model.scale.setScalar(scaleFactor);
-
-        const scaledBox = new THREE.Box3().setFromObject(model);
-        const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
-        model.position.sub(scaledCenter);
-
-        scene.add(model);
-
-        model.traverse((obj) => {
-          if (!headBone && obj.isBone && obj.name === 'Bone') {
-            headBone = obj;
-            baseHeadRot.copy(obj.rotation);
-          }
-          if (!torsoBone && obj.isBone && obj.name === 'Bone_1') {
-            torsoBone = obj;
-            baseTorsoRot.copy(obj.rotation);
-          }
-        });
-
-        if (!headBone) console.warn('Nie znaleziono kości głowy ("Bone").');
-        if (!torsoBone) console.warn('Nie znaleziono kości tułowia ("Bone_1").');
-      },
-      undefined,
-      (err) => {
-        console.error('Błąd ładowania pliku .glb:', err);
-      }
+    const targetPitch = THREE.MathUtils.clamp(
+      -pointer.y * maxPitch * pitchSign,
+      -maxPitch,
+      maxPitch
     );
 
-    // 5. Śledzenie kursora
-    window.addEventListener('pointermove', (e) => {
-      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointer.y = -((e.clientY / window.innerHeight) * 2 - 1);
-    });
+    current.yaw = THREE.MathUtils.lerp(current.yaw, targetYaw, CONFIG.smoothness);
+    current.pitch = THREE.MathUtils.lerp(current.pitch, targetPitch, CONFIG.smoothness);
 
-    // 6. Responsywność okna
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    pivot.rotation.y = current.yaw;
+    pivot.rotation.x = current.pitch;
 
-    // 7. Pętla animacji
-    function animate() {
-      requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+  }
 
-      const yawSign = CONFIG.invertYaw ? -1 : 1;
-      const pitchSign = CONFIG.invertPitch ? -1 : 1;
-
-      const targetYaw = THREE.MathUtils.clamp(
-        pointer.x * maxYaw * yawSign,
-        -maxYaw,
-        maxYaw
-      );
-      const targetPitch = THREE.MathUtils.clamp(
-        -pointer.y * maxPitch * pitchSign,
-        -maxPitch,
-        maxPitch
-      );
-
-      current.yaw = THREE.MathUtils.lerp(current.yaw, targetYaw, CONFIG.smoothness);
-      current.pitch = THREE.MathUtils.lerp(current.pitch, targetPitch, CONFIG.smoothness);
-
-      if (headBone) {
-        if (CONFIG.swapAxes) {
-          headBone.rotation.x = baseHeadRot.x + current.yaw;
-          headBone.rotation.y = baseHeadRot.y + current.pitch;
-        } else {
-          headBone.rotation.y = baseHeadRot.y + current.yaw;
-          headBone.rotation.x = baseHeadRot.x + current.pitch;
-        }
-      }
-
-      if (torsoBone) {
-  const downwardAmount = Math.max(0, -pointer.y);
-  const leanRad = THREE.MathUtils.degToRad(20) * downwardAmount;
-  const yawRad = THREE.MathUtils.degToRad(12) * current.yaw;
-
-  // Tymczasowy test: sprawdzamy X, Y oraz Z, żeby zobaczyć, która oś odchyla tułów w tył
-  torsoBone.rotation.x = baseTorsoRot.x + leanRad;
-  torsoBone.rotation.y = baseTorsoRot.y + yawRad;
-  torsoBone.rotation.z = baseTorsoRot.z + leanRad;
-}
-
-        const targetTorsoYaw = current.yaw * CONFIG.torsoYawFactor * torsoYawSign;
-
-        if (CONFIG.swapAxes) {
-          torsoBone.rotation.x = baseTorsoRot.x + targetTorsoYaw;
-          torsoBone.rotation.y = baseTorsoRot.y + current.torsoLean;
-        } else {
-          torsoBone.rotation.y = baseTorsoRot.y + targetTorsoYaw;
-          torsoBone.rotation.x = baseTorsoRot.x + current.torsoLean;
-        }
-      }
-
-      renderer.render(scene, camera);
-    }
-
-    animate();
-  </script>
-</body>
-</html>
-
+  animate();
+</script>
