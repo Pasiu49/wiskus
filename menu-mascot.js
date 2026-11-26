@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const CONFIG = {
   containerId: 'mascot-widget',
-  modelUrl: './str_wiskus.glb',
+  modelUrl: './glowa.glb',
   desiredHeight: 1.8,
   maxYawLeftDeg: 52,
   maxYawRightDeg: 35,
@@ -13,13 +13,18 @@ const CONFIG = {
   invertPitch: false,
   trackingRadiusPx: 650,
 
-  // Pełny obrót 360° przy przejściu między sekcjami (#home <-> #contact)
+  // Pełny obrót 360° przy przejściu między sekcjami
   spinOnSectionChange: true,
-  spinDurationSec: 0.9,     // Czas pełnego obrotu 360° w sekundach
-  spinDirection: 1,         // 1 lub -1 (kierunek obrotu 360°)
+  spinDurationSec: 0.9,
+  spinDirection: 1,
+  continuousScrollSpins: 0,
 
-  // Opcjonalnie: ile pełnych obrotów 360° ma zrobić przy przewinięciu od samej góry do dołu strony (0 = wyłączone)
-  continuousScrollSpins: 0
+  // Animacja "różgi" po kliknięciu / tapnięciu (szczególnie na telefonie)
+  hornNameMatches: ['rozga', 'różga', 'horn', 'rogi', 'antler', 'twig', 'branch'],
+  hornTapRadiusPx: 140,      // Jak blisko środka widgetu trzeba kliknąć/tapnąć
+  hornAnimDurationSec: 0.65, // Czas trwania animacji
+  hornSwingDeg: 28,          // Maksymalny kąt wychylenia
+  hornWiggles: 3             // Liczba wahnięć tam i z powrotem
 };
 
 function initMascotWidget() {
@@ -70,13 +75,32 @@ function initMascotWidget() {
   const maxYawLeft = THREE.MathUtils.degToRad(CONFIG.maxYawLeftDeg);
   const maxYawRight = THREE.MathUtils.degToRad(CONFIG.maxYawRightDeg);
   const maxPitch = THREE.MathUtils.degToRad(CONFIG.maxPitchDeg);
+  const hornMaxAngle = THREE.MathUtils.degToRad(CONFIG.hornSwingDeg);
 
   const pointer = { x: 0, y: 0 };
   const current = { yaw: 0, pitch: 0 };
 
   let scrollProgress = 0;
 
-  // Stan animacji pełnego obrotu 360° przy zmianie sekcji
+  // Element ("różga") znaleziony w modelu
+  let hornObj = null;
+  const hornBaseQuat = new THREE.Quaternion();
+  const hornSwingQuat = new THREE.Quaternion();
+  const hornAxisZ = new THREE.Vector3(0, 0, 1);
+  const hornAxisX = new THREE.Vector3(1, 0, 0);
+  const hornTempQuat = new THREE.Quaternion();
+
+  const hornAnim = {
+    active: false,
+    elapsed: 0
+  };
+
+  const triggerHornAnim = () => {
+    if (!hornObj) return;
+    hornAnim.active = true;
+    hornAnim.elapsed = 0;
+  };
+
   const spinState = {
     active: false,
     elapsed: 0,
@@ -106,7 +130,6 @@ function initMascotWidget() {
     pointer.y = 0;
   };
 
-  // Wykrywanie przejścia między sekcjami (#home <-> #contact)
   const sections = document.querySelectorAll('main > section');
   if (sections.length > 0 && 'IntersectionObserver' in window) {
     let activeIndex = null;
@@ -148,6 +171,27 @@ function initMascotWidget() {
       model.position.sub(scaledCenter);
 
       pivot.add(model);
+
+      // Szukamy kości lub siatki pasującej do nazwy "różgi"
+      const foundNames = [];
+      model.traverse((obj) => {
+        if (obj.name) foundNames.push(`${obj.type}:${obj.name}`);
+        const lower = (obj.name || '').toLowerCase();
+        if (
+          !hornObj &&
+          CONFIG.hornNameMatches.some((key) => lower.includes(key.toLowerCase()))
+        ) {
+          hornObj = obj;
+          hornBaseQuat.copy(obj.quaternion);
+        }
+      });
+
+      if (!hornObj) {
+        console.warn(
+          'Nie znaleziono obiektu/kości dla różgi. Dostępne nazwy w modelu:',
+          foundNames
+        );
+      }
     },
     undefined,
     (err) => {
@@ -165,6 +209,18 @@ function initMascotWidget() {
 
     pointer.x = THREE.MathUtils.clamp(dx / CONFIG.trackingRadiusPx, -1, 1);
     pointer.y = THREE.MathUtils.clamp(-dy / CONFIG.trackingRadiusPx, -1, 1);
+  });
+
+  // Reakcja na kliknięcie / tapnięcie w okolicy widgetu (np. na telefonie)
+  window.addEventListener('pointerdown', (e) => {
+    const rect = container.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+
+    if (dist <= CONFIG.hornTapRadiusPx) {
+      triggerHornAnim();
+    }
   });
 
   window.addEventListener('scroll', updateScrollProgress, { passive: true });
@@ -192,7 +248,6 @@ function initMascotWidget() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
 
-    // Aktualizacja pełnego obrotu 360° po zmianie sekcji (z płynnym wyhamowaniem easeInOut)
     if (spinState.active) {
       spinState.elapsed += delta;
       const t = Math.min(spinState.elapsed / CONFIG.spinDurationSec, 1);
@@ -202,6 +257,25 @@ function initMascotWidget() {
       if (t >= 1) {
         spinState.active = false;
         spinState.totalOffset = spinState.startAngle + spinState.deltaAngle;
+      }
+    }
+
+    // Animacja "mieszania" / wahania różgi po kliknięciu
+    if (hornObj && hornAnim.active) {
+      hornAnim.elapsed += delta;
+      const t = Math.min(hornAnim.elapsed / CONFIG.hornAnimDurationSec, 1);
+      const decay = 1 - t; // Zanikanie drgania pod koniec animacji
+      const wave = Math.sin(t * Math.PI * 2 * CONFIG.hornWiggles) * decay;
+
+      hornSwingQuat.setFromAxisAngle(hornAxisZ, wave * hornMaxAngle);
+      hornTempQuat.setFromAxisAngle(hornAxisX, wave * hornMaxAngle * 0.45);
+      hornSwingQuat.multiply(hornTempQuat);
+
+      hornObj.quaternion.copy(hornBaseQuat).multiply(hornSwingQuat);
+
+      if (t >= 1) {
+        hornAnim.active = false;
+        hornObj.quaternion.copy(hornBaseQuat);
       }
     }
 
