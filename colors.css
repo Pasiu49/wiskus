@@ -1,0 +1,57 @@
+/*
+ * PALETA STRONY — wszystkie kolory edytuj tutaj.
+ * styles.css: układ i typografia;
+ * mycelium.css: wygląd i układ elementów edycji 2027.
+ */
+:root {
+    /* Strona główna i tekst */
+    --forest-background: #408b9b;
+    --forest-glow: #71b9bd;
+    --forest-shade: #306e85;
+    --forest-ink: #ffffff;
+    --forest-muted: #d5edf0;
+    --forest-outline: rgb(213 237 240 / 10%);
+    --forest-divider: rgb(213 237 240 / 15%);
+
+    /* Menu boczne */
+    --menu-background: #6aabb2;
+    --menu-heading: #203f64;
+    --menu-text: #203f64;
+    --menu-active-background: #d5edf0;
+    --menu-active-text: #203f64;
+    --menu-toggle: #ffffff;
+
+    /* Grzyby na granicy menu: kapelusze, kontury, blaszki i łodygi */
+    --fungal-cap: var(--white);
+    --fungal-ink: #dedede;
+    --fungal-gills: #f0f0f0;
+
+    /* Sieć organiczna: trzy liczby RGB oddzielone przecinkami, bez rgb() i #.
+       color = żyły; lumen = rozjaśnienia i poruszające się kropki. */
+    --physarum-dark-color-rgb: 30, 60, 99;
+    --physarum-dark-lumen-rgb: 54, 97, 130;
+    --physarum-color-rgb: var(--physarum-dark-color-rgb);
+    --physarum-lumen-rgb: var(--physarum-dark-lumen-rgb);
+
+    /* Wspólne kolory. */
+    --white: #FFFFFF;
+    --orange: #FF8C42;
+    --dark-cyan: #114949;
+    --dark-teal: var(--dark-cyan);
+    --dark-indigo: #229dc6;
+
+    /* Przezroczyste powierzchnie, obramowania i cienie */
+    --glass-surface: rgba(255, 255, 255, 0.25);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-border-hover: rgba(255, 255, 255, 0.7);
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --shadow-strong-color: rgba(0, 0, 0, 0.3);
+
+    /* Przyciski kontaktowe */
+    --tint-orange: rgba(255, 140, 66, 0.8);
+    --tint-purple: rgba(106, 17, 203, 0.8);
+    --tint-blue: rgba(63, 94, 251, 0.8);
+    --tint-petrol: rgba(15, 118, 110, 0.8);
+
+}
+

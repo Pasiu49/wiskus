@@ -1,0 +1,260 @@
+/* Układ i typografia. Kolory: colors.css. */
+:root{
+    --font-serif: Georgia, 'Times New Roman', serif;
+    --font-body: 'Karla', sans-serif;
+    --font-heading: 'Outfit', sans-serif;
+    --side-menu-width: 250px;
+}
+
+.side-menu{
+    position: fixed;
+    right: 0px;
+    top: 0px;
+    height: 100vh;
+    width: var(--side-menu-width);
+    background: var(--white);
+    z-index: 1000;
+    overflow-y: auto;
+    border-left: 5px solid var(--orange);
+    box-shadow: -5px 0 10px var(--shadow-color);
+}
+
+.title{
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--dark-teal);
+    margin-bottom: 0px;
+    text-align: center;
+}
+
+.side-menu a{
+    color: var(--dark-cyan);
+    text-decoration: none;
+    font-size: 18px;
+    display: block;
+    padding: 12px 20px;
+    margin: 5px 15px;
+    text-align: center;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 30px;
+}
+
+.side-menu a.active{
+    background: var(--menu-active-background);
+    color: var(--dark-indigo);
+    font-weight: 700;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transform: scale(1.05);
+}
+
+.side-menu a.active::after{
+    display: none;
+}
+
+*{
+    box-sizing: border-box;
+}
+
+html,  body{
+    margin: 0px;
+    padding: 0px;
+    font-family: var(--font-body);
+    scroll-behavior: smooth;
+    height: 100%;
+    overflow: hidden;
+}
+
+body{
+    background-repeat: repeat-y;
+    font-size: 1.5rem;
+}
+
+main{
+    width: calc(100vw - var(--side-menu-width));
+    height: 100vh;
+    max-width: 100vw;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+}
+
+main::-webkit-scrollbar{
+    display: none;
+}
+
+.side-menu ul{
+    list-style: none;
+    padding: 8px 0px 0px;
+    margin: 0px;
+}
+
+.side-menu li{
+    margin: 10px 0px;
+}
+
+.section{
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 40px 40px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.content-cloud{
+    background: var(--glass-surface);
+    padding: 25px;
+    border-radius: 40px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 15px 35px var(--shadow-color);
+    border: 2px solid var(--glass-border);
+    z-index: 5;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0px auto;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.contact-links-inline{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.abstract-book-cloud{
+    margin-top: 30px;
+}
+
+.contact-link{
+    padding: 15px 30px;
+    border-radius: 50px;
+    text-decoration: none;
+    color: var(--white);
+    font-weight: 700;
+    backdrop-filter: blur(8px);
+    border: 2px solid var(--glass-border);
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.contact-link:hover{
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 10px 25px var(--shadow-strong-color);
+    border-color: var(--glass-border-hover);
+    filter: brightness(1.1);
+}
+
+.contact-link.mail{
+    background: var(--tint-petrol);
+}
+
+.contact-link.facebook{
+    background: var(--tint-blue);
+}
+
+.contact-link.event{
+    background: var(--tint-purple);
+}
+
+.contact-link.instagram{
+    background: var(--tint-orange);
+}
+
+.side-menu .logo{
+    text-align: center;
+    margin: 20px 0px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.side-menu .logo img{
+    width: auto;
+    max-width: 150px;
+    height: auto;
+}
+
+h1{
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 3.5rem;
+    position: absolute;
+    top: 25px;
+    left: calc(50% - var(--side-menu-width) / 2);
+    transform: translateX(-50%);
+    margin: 0px;
+    z-index: 100;
+    width: auto;
+    text-align: center;
+}
+
+.hamburger-menu{
+    display: none;
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    font-size: 30px;
+    z-index: 1100;
+    background: none;
+    border-width: medium;
+    border-style: none;
+    border-color: currentcolor;
+    border-image: initial;
+    cursor: pointer;
+}
+
+@media (max-width: 768px){
+    main{
+        scroll-snap-type: y;
+        height: 100vh;
+        overflow-y: auto;
+        scrollbar-width: none;
+        width: 100% !important;
+    }
+
+    .side-menu{
+        position: fixed !important;
+        right: -100% !important;
+        left: auto !important;
+        width: 80% !important;
+        transition: right 0.3s ease-in-out !important;
+        display: block !important;
+    }
+
+    .side-menu.active{
+        right: 0px !important;
+    }
+
+    .hamburger-menu{
+        display: block !important;
+        z-index: 1100 !important;
+    }
+
+    .section{
+        padding: 100px 20px 40px;
+        height: auto;
+        min-height: 100vh;
+        justify-content: flex-start;
+        overflow-y: visible;
+    }
+
+    h1{
+        font-size: 2rem;
+        text-align: center;
+        margin-top: 0px;
+    }
+
+    .content-cloud{
+        width: 100%;
+        padding: 20px;
+        border-radius: 25px;
+    }
+
+}
+

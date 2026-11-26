@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WISK 2027</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600&family=Karla:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="colors.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mycelium.css">
+</head>
+
+<body class="mycelium-page">
+    <button class="hamburger-menu" aria-label="Toggle menu">
+        &#9776;
+    </button>
+
+    <nav class="side-menu right-menu">
+        <h2 class="title">WISK 2027</h2>
+        <ul id="menu-list">
+            <li class="logo">
+                <a href="#home"><img src="images/14.png" alt="Logo" /></a>
+            </li>
+            <li><a href="#contact">Kontakt</a></li>
+        </ul>
+    <div id="mascot-widget" style="position: fixed; right: 20px; bottom: 20px; width: 220px; height: 220px; z-index: 9999; pointer-events: none;"></div>
+
+    <script type="importmap">
+    {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="./menu-mascot.js"></script>
+
+    </nav>
+
+    <div class="fungal-border" aria-hidden="true">
+        <svg class="fungal-border-veins" viewBox="0 0 160 1000" preserveAspectRatio="none" focusable="false">
+            <defs>
+                <symbol id="fungal-border-cluster" viewBox="0 0 80 180">
+                    <path class="fungal-stem" d="M31 60C30 87 39 120 69 145L79 154C47 141 24 100 25 63Z"/>
+                    <path class="fungal-gills" d="M3 59C18 48 49 47 66 58C57 74 17 76 3 59Z"/>
+                    <path class="fungal-cap" d="M3 59C8 40 20 17 35 18C51 19 61 40 66 58C46 50 23 50 3 59Z"/>
+                    <path class="fungal-detail" d="M10 60L28 63M17 66L29 64M25 69L31 64M36 70L33 64M46 68L35 63M56 64L37 62M30 79C34 103 45 122 62 138"/>
+                    <path class="fungal-flecks" d="M19 41C21 37 24 37 25 41C23 43 21 43 19 41ZM34 29C36 26 39 28 38 31C36 32 35 31 34 29ZM47 43C49 40 53 42 52 45C50 47 48 46 47 43Z"/>
+                    <path class="fungal-stem" d="M58 112C60 129 68 143 79 153L73 151C60 141 54 125 53 113Z"/>
+                    <path class="fungal-gills" d="M41 110C51 104 65 105 76 112C67 120 50 120 41 110Z"/>
+                    <path class="fungal-cap" d="M41 110C45 96 52 84 59 86C69 88 74 101 76 112C65 107 51 106 41 110Z"/>
+                    <path class="fungal-detail" d="M46 111L56 113M51 115L57 113M62 117L59 113M69 115L61 113M49 100C51 95 54 92 56 91"/>
+                    <path class="fungal-root" d="M79 154C67 149 61 151 52 159M69 147C66 155 67 163 71 170M77 153C77 161 74 166 78 178M52 159L43 161M52 159L49 167"/>
+                </symbol>
+            </defs>
+            <path d="M79 0C71 71 84 116 76 184S82 304 75 379S83 508 76 574S82 704 75 776S81 916 77 1000M78 0C83 103 71 139 79 217S72 354 79 442S73 577 79 661S72 811 79 903S75 967 79 1000"/>
+            <path d="M73 0C62 65 78 113 67 181S76 296 66 370S76 500 68 572S76 704 65 775S76 920 70 1000M67 0C71 91 56 135 65 212S57 344 67 429S59 571 66 654S56 800 68 891S61 966 65 1000"/>
+            <path d="M61 0C51 78 66 129 55 201S65 320 54 399S64 526 57 602S65 730 53 810S63 938 58 1000M57 0C63 102 47 155 58 238S48 373 59 457S50 592 59 678S48 829 59 912S53 973 55 1000"/>
+            <path d="M76 17C69 109 82 155 72 236S80 368 71 444S80 584 72 664S80 803 70 885S79 967 75 1000M64 0C56 86 70 151 60 225S69 360 60 441S69 568 61 647S69 789 59 873S69 956 62 1000"/>
+            <path d="M78 211C67 210 55 221 48 242L41 253M55 226L47 225L40 218M68 180C61 188 58 198 58 211M67 370C56 376 50 390 44 403M52 386L42 387L36 382M77 530C65 527 52 540 46 559L39 570M55 542L48 535L42 535M65 654C54 661 50 676 43 687M54 669L44 668L38 659M78 909C65 906 55 918 48 937L42 949M57 920L48 915L40 917M69 774C59 782 53 795 53 809"/>
+            <path d="M81 0C89 71 76 116 84 184S78 304 85 379S77 508 84 574S78 704 85 776S79 916 83 1000M82 0C77 103 89 139 81 217S88 354 81 442S87 577 81 661S88 811 81 903S85 967 81 1000"/>
+            <path d="M87 0C98 65 82 113 93 181S84 296 94 370S84 500 92 572S84 704 95 775S84 920 90 1000M93 0C89 91 104 135 95 212S103 344 93 429S101 571 94 654S104 800 92 891S99 966 95 1000"/>
+            <path d="M99 0C109 78 94 129 105 201S95 320 106 399S96 526 103 602S95 730 107 810S97 938 102 1000M103 0C97 102 113 155 102 238S112 373 101 457S110 592 101 678S112 829 101 912S107 973 105 1000"/>
+            <path d="M84 17C91 109 78 155 88 236S80 368 89 444S80 584 88 664S80 803 90 885S81 967 85 1000M96 0C104 86 90 151 100 225S91 360 100 441S91 568 99 647S91 789 101 873S91 956 98 1000"/>
+            <path d="M82 211C93 210 105 221 112 242L119 253M105 226L113 225L120 218M92 180C99 188 102 198 102 211M93 370C104 376 110 390 116 403M108 386L118 387L124 382M83 530C95 527 108 540 114 559L121 570M105 542L112 535L118 535M95 654C106 661 110 676 117 687M106 669L116 668L122 659M82 909C95 906 105 918 112 937L118 949M103 920L112 915L120 917M91 774C101 782 107 795 107 809"/>
+            <path d="M78 92C63 88 49 98 39 119L26 131M49 103C40 95 31 95 23 99M78 315C62 307 43 316 29 340L16 351M43 321C36 311 26 309 17 314M78 718C62 710 44 723 34 746L22 758M48 726C39 719 29 721 21 727M82 160C100 152 116 165 126 187L139 200M114 167C124 159 135 162 142 171M82 469C101 460 121 477 132 503L145 514M117 475C128 468 138 472 146 481M82 858C100 847 119 861 130 884L143 898M118 863C128 854 139 858 147 867"/>
+            <path d="M74.0 0C76.1 30 77.9 70 77.8 100C76.5 130 73.7 170 71.6 200C70.3 230 70.3 270 71.7 300C73.8 330 76.6 370 77.8 400C77.9 430 76.1 470 74.0 500C71.8 530 70.1 570 70.2 600C71.5 630 74.3 670 76.4 700C77.7 730 77.7 770 76.3 800C74.2 830 71.4 870 70.2 900C70.1 930 71.9 970 74.1 1000"/>
+            <path d="M72.4 0C72.4 30 70.3 70 67.8 100C65.4 130 63.5 170 63.7 200C65.3 230 68.5 270 70.9 300C72.3 330 72.1 370 70.5 400C68.1 430 64.9 470 63.6 500C63.7 530 65.8 570 68.2 600C70.6 630 72.5 670 72.2 700C70.7 730 67.5 770 65.1 800C63.7 830 63.9 870 65.6 900C68.0 930 71.1 970 72.4 1000"/>
+            <path d="M64.6 0C61.9 30 58.4 70 57.0 100C57.2 130 59.7 170 62.5 200C65.1 230 67.0 270 66.7 300C64.9 330 61.2 370 58.6 400C57.1 430 57.5 470 59.4 500C62.2 530 65.6 570 67.0 600C66.8 630 64.3 670 61.5 700C58.9 730 57.0 770 57.3 800C59.2 830 62.8 870 65.4 900C66.9 930 66.5 970 64.5 1000"/>
+            <path d="M52.1 0C50.5 30 51.1 70 53.3 100C56.4 130 60.1 170 61.6 200C61.2 230 58.4 270 55.2 300C52.4 330 50.4 370 50.9 400C53.0 430 57.1 470 59.9 500C61.5 530 60.9 570 58.6 600C55.6 630 51.8 670 50.4 700C50.8 730 53.7 770 56.8 800C59.7 830 61.6 870 61.1 900C58.9 930 54.8 970 52.0 1000"/>
+            <path d="M44.5 0C46.9 30 51.5 70 54.5 100C56.1 130 55.3 170 52.7 200C49.3 230 45.3 270 43.9 300C44.4 330 47.7 370 51.1 400C54.2 430 56.2 470 55.5 500C53.0 530 48.5 570 45.5 600C43.9 630 44.8 670 47.3 700C50.8 730 54.8 770 56.2 800C55.6 830 52.3 870 48.8 900C45.7 930 43.8 970 44.6 1000"/>
+            <path d="M45.5 0C48.8 30 50.7 70 49.8 100C47.1 130 42.1 170 38.9 200C37.3 230 38.4 270 41.3 300C45.1 330 49.3 370 50.7 400C50.0 430 46.3 470 42.5 500C39.2 530 37.3 570 38.2 600C41.0 630 45.9 670 49.1 700C50.7 730 49.5 770 46.6 800C42.9 830 38.6 870 37.3 900C38.0 930 41.8 970 45.6 1000"/>
+            <path d="M71 45C59 38 57 52 51 69L42 80M58 54C49 47 42 49 38 57M71 120C59 113 50 127 44 144L35 155M51 129C42 122 35 124 31 132M71 195C59 188 43 202 37 219L28 230M44 204C35 197 28 199 24 207M71 270C59 263 36 277 30 294L21 305M37 279C28 272 21 274 17 282M71 345C59 338 57 352 51 369L42 380M58 354C49 347 42 349 38 357M71 420C59 413 50 427 44 444L35 455M51 429C42 422 35 424 31 432M71 495C59 488 43 502 37 519L28 530M44 504C35 497 28 499 24 507M71 570C59 563 36 577 30 594L21 605M37 579C28 572 21 574 17 582M71 645C59 638 57 652 51 669L42 680M58 654C49 647 42 649 38 657M71 720C59 713 50 727 44 744L35 755M51 729C42 722 35 724 31 732M71 795C59 788 43 802 37 819L28 830M44 804C35 797 28 799 24 807M71 870C59 863 36 877 30 894L21 905M37 879C28 872 21 874 17 882"/>
+            <path d="M88.6 0C89.8 30 89.6 70 88.1 100C86.0 130 83.2 170 82.1 200C82.2 230 84.1 270 86.3 300C88.4 330 89.9 370 89.7 400C88.3 430 85.4 470 83.4 500C82.2 530 82.4 570 83.9 600C86.1 630 88.8 670 89.9 700C89.8 730 87.8 770 85.7 800C83.6 830 82.1 870 82.3 900C83.7 930 86.6 970 88.6 1000"/>
+            <path d="M96.1 0C94.5 30 91.2 70 88.9 100C87.6 130 88.0 170 89.8 200C92.3 230 95.3 270 96.5 300C96.2 330 94.0 370 91.4 400C89.1 430 87.5 470 87.9 500C89.6 530 92.9 570 95.1 600C96.4 630 96.0 670 94.2 700C91.7 730 88.7 770 87.5 800C87.8 830 90.1 870 92.6 900C94.9 930 96.5 970 96.1 1000"/>
+            <path d="M97.2 0C94.6 30 92.9 70 93.5 100C95.4 130 99.1 170 101.6 200C103.0 230 102.4 270 100.3 300C97.5 330 94.1 370 93.0 400C93.3 430 96.0 470 98.9 500C101.4 530 103.1 570 102.5 600C100.5 630 96.8 670 94.3 700C93.0 730 93.7 770 95.8 800C98.6 830 101.9 870 103.1 900C102.6 930 99.9 970 97.1 1000"/>
+            <path d="M98.4 0C98.9 30 102.0 70 105.1 100C107.9 130 109.6 170 108.9 200C106.6 230 102.5 270 99.8 300C98.4 330 99.3 370 101.7 400C104.8 430 108.4 470 109.6 500C109.1 530 106.0 570 102.8 600C100.0 630 98.4 670 99.1 700C101.4 730 105.6 770 108.2 800C109.6 830 108.7 870 106.3 900C103.1 930 99.5 970 98.4 1000"/>
+            <path d="M107.7 0C111.1 30 115.0 70 116.2 100C115.4 130 111.9 170 108.5 200C105.5 230 103.8 270 104.8 300C107.4 330 111.9 370 114.8 400C116.2 430 115.0 470 112.3 500C108.8 530 105.0 570 103.8 600C104.6 630 108.1 670 111.6 700C114.6 730 116.2 770 115.2 800C112.6 830 108.0 870 105.2 900C103.8 930 105.0 970 107.8 1000"/>
+            <path d="M121.4 0C122.7 30 121.3 70 118.2 100C114.5 130 110.4 170 109.3 200C110.2 230 114.2 270 118.0 300C121.1 330 122.7 370 121.5 400C118.6 430 113.6 470 110.6 500C109.3 530 110.7 570 113.8 600C117.6 630 121.7 670 122.7 700C121.7 730 117.8 770 114.0 800C110.8 830 109.3 870 110.5 900C113.5 930 118.4 970 121.4 1000"/>
+            <path d="M89 78C101 71 103 85 109 102L118 113M102 87C111 80 118 82 122 90M89 153C101 146 110 160 116 177L125 188M109 162C118 155 125 157 129 165M89 228C101 221 117 235 123 252L132 263M116 237C125 230 132 232 136 240M89 303C101 296 124 310 130 327L139 338M123 312C132 305 139 307 143 315M89 378C101 371 103 385 109 402L118 413M102 387C111 380 118 382 122 390M89 453C101 446 110 460 116 477L125 488M109 462C118 455 125 457 129 465M89 528C101 521 117 535 123 552L132 563M116 537C125 530 132 532 136 540M89 603C101 596 124 610 130 627L139 638M123 612C132 605 139 607 143 615M89 678C101 671 103 685 109 702L118 713M102 687C111 680 118 682 122 690M89 753C101 746 110 760 116 777L125 788M109 762C118 755 125 757 129 765M89 828C101 821 117 835 123 852L132 863M116 837C125 830 132 832 136 840M89 903C101 896 124 910 130 927L139 938M123 912C132 905 139 907 143 915"/>
+        </svg>
+        <svg class="fungal-border-cluster fungal-border-top" viewBox="0 0 80 180" focusable="false"><use href="#fungal-border-cluster"/></svg>
+        <svg class="fungal-border-cluster fungal-border-bottom" viewBox="0 0 80 180" focusable="false"><use href="#fungal-border-cluster"/></svg>
+    </div>
+
+    <main>
+        <section id="home" class="section mycelium-home" aria-labelledby="mycelium-title">
+            <h1 id="mycelium-title" class="mycelium-title" data-physarum-node="4">WISK 2027</h1>
+            <div class="forest-intro">
+                <h2 data-physarum-node="2">Wyjazd Interdyscyplinarny</h2>
+                <h2 data-physarum-node="2">Studentów Kognitywistyki</h2>
+                <p>Konferencja wyjazdowa organizowana przez KNSK z Uniwersytetu Jagiellońskiego cyklicznie od 2025.
+Zrzesza studentów kognitywistyki i osoby zainteresowane kognitywistyką z całej Polski.</p>
+            </div>
+            <dl class="stay-details" aria-label="Miejsce i daty wyjazdu" data-mycelium-avoid>
+                <div class="stay-detail">
+                    <dt>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/>
+                            <circle cx="12" cy="10" r="2.5"/>
+                        </svg>
+                        Miejsce
+                    </dt>
+                    
+                    <dd>Ośrodek, Zakopane, Polska</dd>
+                </div>
+                <div class="stay-detail">
+                    <dt>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <rect x="3" y="5" width="18" height="16" rx="3"/>
+                            <path d="M7 3v4m10-4v4M3 11h18m-13 5h2m4 0h2"/>
+                        </svg>
+                        Data pobytu
+                    </dt>
+                    <!-- Wpisz poniżej datę rozpoczęcia i zakończenia pobytu. -->
+                    <dd>9-11.04.2027</dd>
+                </div>
+            </dl>
+        </section>
+
+
+        <section id="contact" class="section">
+            <h1>Kontakt</h1>
+            <div class="content-cloud">
+                <div class="contact-links-inline">
+                    <a class="contact-link facebook" href="https://www.facebook.com/kolokogniuj" target="_blank" rel="noopener noreferrer">Facebook</a>
+                    <a class="contact-link event" href="https://fb.me/e/7upfKqDjj" target="_blank" rel="noopener noreferrer">Wydarzenie na FB</a>
+                    <a class="contact-link instagram" href="https://www.instagram.com/knskuj/" target="_blank" rel="noopener noreferrer">Instagram</a>
+                    <a class="contact-link mail" href="mailto:wiskognitywistyki@gmail.com">Mail</a>
+                </div>
+            </div>
+            
+            <div class="content-cloud abstract-book-cloud">
+                <p>Na koniec konferencji udostępnimy księgę abstraktów!</p>
+            </div>
+        </section>
+
+    </main>
+    <script src="script.js"></script>
+    <script src="forest-growth.js"></script>
+    <script src="fungal-border.js"></script>
+</body>
+</html>
+
+
+
+
