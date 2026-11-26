@@ -13,15 +13,15 @@ const CONFIG = {
   invertPitch: false,
   trackingRadiusPx: 650,
 
-  // Pełny obrót 360° przy przejściu między sekcjami
+  // Pełny obrót 360° przy przejściu między sekcjami (#home <-> #contact)
   spinOnSectionChange: true,
   spinDurationSec: 0.9,
   spinDirection: 1,
   continuousScrollSpins: 0,
 
-  // Dwuczęściowa rózga kuchenna: rączka ("Cylinder") + metal ("Sphere")
-  handleNameMatches: ['cylinder'],
-  wireNameMatches: ['sphere'],
+  // Dwuczęściowa rózga kuchenna: dokładne dopasowanie nazw ("raczka" i "rozga")
+  handleNameMatches: ['raczka'],
+  wireNameMatches: ['rozga'],
   hornTapRadiusPx: 150,
   hornAnimDurationSec: 0.7,
   hornSwingDeg: 34,
@@ -83,7 +83,6 @@ function initMascotWidget() {
 
   let scrollProgress = 0;
 
-  // Wspólny pivot dla rączki i metalowej części rózgi
   let whiskPivot = null;
   const whiskBaseQuat = new THREE.Quaternion();
   const whiskSwingQuat = new THREE.Quaternion();
@@ -182,10 +181,10 @@ function initMascotWidget() {
         if (obj.name) foundNames.push(`${obj.type}:${obj.name}`);
         if (!obj.isMesh) return;
 
-        const lower = (obj.name || '').toLowerCase();
-        if (CONFIG.handleNameMatches.some((k) => lower.includes(k.toLowerCase()))) {
+        const lower = (obj.name || '').trim().toLowerCase();
+        if (CONFIG.handleNameMatches.some((k) => lower === k.toLowerCase())) {
           handleParts.push(obj);
-        } else if (CONFIG.wireNameMatches.some((k) => lower.includes(k.toLowerCase()))) {
+        } else if (CONFIG.wireNameMatches.some((k) => lower === k.toLowerCase())) {
           wireParts.push(obj);
         }
       });
@@ -193,7 +192,6 @@ function initMascotWidget() {
       const allWhiskParts = [...handleParts, ...wireParts];
 
       if (allWhiskParts.length > 0) {
-        // Punkt obrotu ustawiamy w środku rączki (lub wszystkich części rózgi, jeśli rączka ma inną nazwę)
         const anchorSource = handleParts.length > 0 ? handleParts : allWhiskParts;
         const anchorBox = new THREE.Box3();
         anchorSource.forEach((part) => anchorBox.expandByObject(part));
@@ -206,7 +204,6 @@ function initMascotWidget() {
         pivot.add(whiskPivot);
         whiskPivot.updateMatrixWorld(true);
 
-        // attach() zachowuje dokładną pozycję i skalę obu części w scenie
         allWhiskParts.forEach((part) => whiskPivot.attach(part));
         whiskBaseQuat.copy(whiskPivot.quaternion);
       } else {
@@ -282,7 +279,6 @@ function initMascotWidget() {
       }
     }
 
-    // Ruch mieszania całą rózgą (rączka + druty razem wokół rączki)
     if (whiskPivot && hornAnim.active) {
       hornAnim.elapsed += delta;
       const t = Math.min(hornAnim.elapsed / CONFIG.hornAnimDurationSec, 1);
