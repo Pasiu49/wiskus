@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const CONFIG = {
   containerId: 'mascot-widget',
-  modelUrl: './glowa.glb',
+  modelUrl: './str_wiskus.glb',
   desiredHeight: 1.8,
   maxYawLeftDeg: 52,
   maxYawRightDeg: 35,
