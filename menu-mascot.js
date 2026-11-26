@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const CONFIG = {
   containerId: 'mascot-widget',
-  modelUrl: './str_wiskus.glb',
+  modelUrl: './glowa.glb',
   desiredHeight: 1.8,
   maxYawLeftDeg: 52,
   maxYawRightDeg: 35,
@@ -19,12 +19,12 @@ const CONFIG = {
   spinDirection: 1,
   continuousScrollSpins: 0,
 
-  // Animacja "różgi" po kliknięciu / tapnięciu (szczególnie na telefonie)
-  hornNameMatches: ['rozga', 'różga', 'horn', 'rogi', 'antler', 'twig', 'branch'],
-  hornTapRadiusPx: 140,      // Jak blisko środka widgetu trzeba kliknąć/tapnąć
-  hornAnimDurationSec: 0.65, // Czas trwania animacji
-  hornSwingDeg: 28,          // Maksymalny kąt wychylenia
-  hornWiggles: 3             // Liczba wahnięć tam i z powrotem
+  // Animacja rózgi kuchennej po kliknięciu / tapnięciu (np. na telefonie)
+  hornNameMatches: ['rozga', 'różga', 'whisk', 'trzepaczka', 'beater', 'horn', 'rogi'],
+  hornTapRadiusPx: 140,
+  hornAnimDurationSec: 0.65,
+  hornSwingDeg: 28,
+  hornWiggles: 3
 };
 
 function initMascotWidget() {
@@ -82,7 +82,6 @@ function initMascotWidget() {
 
   let scrollProgress = 0;
 
-  // Element ("różga") znaleziony w modelu
   let hornObj = null;
   const hornBaseQuat = new THREE.Quaternion();
   const hornSwingQuat = new THREE.Quaternion();
@@ -172,7 +171,6 @@ function initMascotWidget() {
 
       pivot.add(model);
 
-      // Szukamy kości lub siatki pasującej do nazwy "różgi"
       const foundNames = [];
       model.traverse((obj) => {
         if (obj.name) foundNames.push(`${obj.type}:${obj.name}`);
@@ -188,7 +186,7 @@ function initMascotWidget() {
 
       if (!hornObj) {
         console.warn(
-          'Nie znaleziono obiektu/kości dla różgi. Dostępne nazwy w modelu:',
+          'Nie znaleziono obiektu/kości dla rózgi kuchennej. Dostępne nazwy w modelu:',
           foundNames
         );
       }
@@ -211,7 +209,6 @@ function initMascotWidget() {
     pointer.y = THREE.MathUtils.clamp(-dy / CONFIG.trackingRadiusPx, -1, 1);
   });
 
-  // Reakcja na kliknięcie / tapnięcie w okolicy widgetu (np. na telefonie)
   window.addEventListener('pointerdown', (e) => {
     const rect = container.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -260,11 +257,10 @@ function initMascotWidget() {
       }
     }
 
-    // Animacja "mieszania" / wahania różgi po kliknięciu
     if (hornObj && hornAnim.active) {
       hornAnim.elapsed += delta;
       const t = Math.min(hornAnim.elapsed / CONFIG.hornAnimDurationSec, 1);
-      const decay = 1 - t; // Zanikanie drgania pod koniec animacji
+      const decay = 1 - t;
       const wave = Math.sin(t * Math.PI * 2 * CONFIG.hornWiggles) * decay;
 
       hornSwingQuat.setFromAxisAngle(hornAxisZ, wave * hornMaxAngle);
