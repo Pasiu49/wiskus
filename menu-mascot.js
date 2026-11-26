@@ -19,11 +19,12 @@ const CONFIG = {
   spinDirection: 1,
   continuousScrollSpins: 0,
 
-  // Animacja rózgi kuchennej po kliknięciu / tapnięciu (np. na telefonie)
-  hornNameMatches: ['rozga', 'różga', 'whisk', 'trzepaczka', 'beater', 'horn', 'rogi'],
-  hornTapRadiusPx: 140,
-  hornAnimDurationSec: 0.65,
-  hornSwingDeg: 28,
+  // Dwuczęściowa rózga kuchenna (rączka + część metalowa)
+  handleNameMatches: ['raczka', 'rączka', 'handle', 'uchwyt', 'trzonek'],
+  wireNameMatches: ['rozga', 'różga', 'whisk', 'drut', 'metal', 'trzepaczka', 'wire'],
+  hornTapRadiusPx: 150,
+  hornAnimDurationSec: 0.7,
+  hornSwingDeg: 34,
   hornWiggles: 3
 };
 
@@ -82,12 +83,13 @@ function initMascotWidget() {
 
   let scrollProgress = 0;
 
-  let hornObj = null;
-  const hornBaseQuat = new THREE.Quaternion();
-  const hornSwingQuat = new THREE.Quaternion();
-  const hornAxisZ = new THREE.Vector3(0, 0, 1);
-  const hornAxisX = new THREE.Vector3(1, 0, 0);
-  const hornTempQuat = new THREE.Quaternion();
+  // Wspólny pivot dla rączki i metalowej części rózgi
+  let whiskPivot = null;
+  const whiskBaseQuat = new THREE.Quaternion();
+  const whiskSwingQuat = new THREE.Quaternion();
+  const whiskTempQuat = new THREE.Quaternion();
+  const whiskAxisZ = new THREE.Vector3(0, 0, 1);
+  const whiskAxisX = new THREE.Vector3(1, 0, 0);
 
   const hornAnim = {
     active: false,
@@ -95,7 +97,7 @@ function initMascotWidget() {
   };
 
   const triggerHornAnim = () => {
-    if (!hornObj) return;
+    if (!whiskPivot) return;
     hornAnim.active = true;
     hornAnim.elapsed = 0;
   };
@@ -170,23 +172,46 @@ function initMascotWidget() {
       model.position.sub(scaledCenter);
 
       pivot.add(model);
+      model.updateMatrixWorld(true);
 
+      const handleParts = [];
+      const wireParts = [];
       const foundNames = [];
+
       model.traverse((obj) => {
         if (obj.name) foundNames.push(`${obj.type}:${obj.name}`);
+        if (!obj.isMesh) return;
+
         const lower = (obj.name || '').toLowerCase();
-        if (
-          !hornObj &&
-          CONFIG.hornNameMatches.some((key) => lower.includes(key.toLowerCase()))
-        ) {
-          hornObj = obj;
-          hornBaseQuat.copy(obj.quaternion);
+        if (CONFIG.handleNameMatches.some((k) => lower.includes(k.toLowerCase()))) {
+          handleParts.push(obj);
+        } else if (CONFIG.wireNameMatches.some((k) => lower.includes(k.toLowerCase()))) {
+          wireParts.push(obj);
         }
       });
 
-      if (!hornObj) {
+      const allWhiskParts = [...handleParts, ...wireParts];
+
+      if (allWhiskParts.length > 0) {
+        // Punkt obrotu ustawiamy w środku rączki (lub wszystkich części rózgi, jeśli rączka ma inną nazwę)
+        const anchorSource = handleParts.length > 0 ? handleParts : allWhiskParts;
+        const anchorBox = new THREE.Box3();
+        anchorSource.forEach((part) => anchorBox.expandByObject(part));
+
+        const worldAnchor = anchorBox.getCenter(new THREE.Vector3());
+        const localAnchor = pivot.worldToLocal(worldAnchor.clone());
+
+        whiskPivot = new THREE.Group();
+        whiskPivot.position.copy(localAnchor);
+        pivot.add(whiskPivot);
+        whiskPivot.updateMatrixWorld(true);
+
+        // attach() zachowuje dokładną pozycję i skalę obu części w scenie
+        allWhiskParts.forEach((part) => whiskPivot.attach(part));
+        whiskBaseQuat.copy(whiskPivot.quaternion);
+      } else {
         console.warn(
-          'Nie znaleziono obiektu/kości dla rózgi kuchennej. Dostępne nazwy w modelu:',
+          'Nie dopasowano rączki ani metalowej części rózgi. Wszystkie nazwy w glowa.glb:',
           foundNames
         );
       }
@@ -257,21 +282,22 @@ function initMascotWidget() {
       }
     }
 
-    if (hornObj && hornAnim.active) {
+    // Ruch mieszania całą rózgą (rączka + druty razem wokół rączki)
+    if (whiskPivot && hornAnim.active) {
       hornAnim.elapsed += delta;
       const t = Math.min(hornAnim.elapsed / CONFIG.hornAnimDurationSec, 1);
       const decay = 1 - t;
       const wave = Math.sin(t * Math.PI * 2 * CONFIG.hornWiggles) * decay;
 
-      hornSwingQuat.setFromAxisAngle(hornAxisZ, wave * hornMaxAngle);
-      hornTempQuat.setFromAxisAngle(hornAxisX, wave * hornMaxAngle * 0.45);
-      hornSwingQuat.multiply(hornTempQuat);
+      whiskSwingQuat.setFromAxisAngle(whiskAxisZ, wave * hornMaxAngle);
+      whiskTempQuat.setFromAxisAngle(whiskAxisX, wave * hornMaxAngle * 0.5);
+      whiskSwingQuat.multiply(whiskTempQuat);
 
-      hornObj.quaternion.copy(hornBaseQuat).multiply(hornSwingQuat);
+      whiskPivot.quaternion.copy(whiskBaseQuat).multiply(whiskSwingQuat);
 
       if (t >= 1) {
         hornAnim.active = false;
-        hornObj.quaternion.copy(hornBaseQuat);
+        whiskPivot.quaternion.copy(whiskBaseQuat);
       }
     }
 
