@@ -19,9 +19,9 @@ const CONFIG = {
   spinDirection: 1,
   continuousScrollSpins: 0,
 
-  // Dwuczęściowa rózga kuchenna (rączka + część metalowa)
-  handleNameMatches: ['raczka', 'rączka', 'handle', 'uchwyt', 'trzonek'],
-  wireNameMatches: ['rozga', 'różga', 'whisk', 'drut', 'metal', 'trzepaczka', 'wire'],
+  // Dwuczęściowa rózga kuchenna: rączka ("Cylinder") + metal ("Sphere")
+  handleNameMatches: ['cylinder'],
+  wireNameMatches: ['sphere'],
   hornTapRadiusPx: 150,
   hornAnimDurationSec: 0.7,
   hornSwingDeg: 34,
